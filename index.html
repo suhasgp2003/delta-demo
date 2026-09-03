@@ -1,11 +1,77 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sample Page</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Ledgerly is a private, local-first personal finance dashboard.">
+  <title>Ledgerly — Personal Finance</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script src="script.js" defer></script>
 </head>
 <body>
-    
+  <a class="skip-link" href="#main-content">Skip to content</a>
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="#dashboard" aria-label="Ledgerly dashboard"><span class="brand-mark">L</span><span>ledgerly</span></a>
+      <div class="topbar-actions">
+        <span class="privacy-note"><i></i> Private &amp; local</span>
+        <button class="icon-button" id="theme-toggle" type="button" aria-label="Switch to dark mode" title="Switch theme">☾</button>
+        <button class="button primary add-button" id="open-transaction-modal" type="button"><b>+</b> Add transaction</button>
+      </div>
+    </header>
+
+    <main id="main-content">
+      <section class="page-heading" id="dashboard">
+        <div><p class="eyebrow">OVERVIEW</p><h1>Good <span id="day-greeting">morning</span>, there.</h1><p class="muted">Here is a clear view of your money this month.</p></div>
+        <div class="heading-actions">
+          <button class="button secondary" id="ai-insights-button" type="button">✦ AI insights</button>
+          <div class="export-wrap"><button class="button secondary" id="export-menu-button" type="button" aria-expanded="false" aria-controls="export-menu">Export&nbsp;⌄</button><div id="export-menu" class="export-menu" hidden><button data-export="csv" type="button">Download CSV</button><button data-export="pdf" type="button">Download PDF report</button></div></div>
+        </div>
+      </section>
+
+      <section class="hero-card" aria-label="Current financial balance">
+        <div class="hero-content"><p class="hero-label">TOTAL BALANCE</p><p class="hero-balance" id="balance">₹0</p><div class="hero-meta"><span><b id="balance-trend-icon">↗</b> <strong id="balance-trend">₹0</strong> net this month</span><span id="current-period">—</span></div></div>
+        <i class="hero-orb one"></i><i class="hero-orb two"></i>
+      </section>
+
+      <section class="stat-grid" aria-label="Financial summary">
+        <article class="stat-card income"><span class="stat-icon">↓</span><p class="stat-label">TOTAL INCOME</p><p class="stat-value" id="total-income">₹0</p><p class="stat-detail positive" id="income-detail">No income recorded</p></article>
+        <article class="stat-card expense"><span class="stat-icon">↑</span><p class="stat-label">TOTAL EXPENSES</p><p class="stat-value" id="total-expenses">₹0</p><p class="stat-detail negative" id="expense-detail">No expenses recorded</p></article>
+        <article class="stat-card budget"><span class="stat-icon">◎</span><div class="label-row"><p class="stat-label">MONTHLY BUDGET</p><button class="text-button" id="edit-budget-button" type="button">Edit</button></div><p class="stat-value" id="monthly-budget">Not set</p><div class="progress"><i id="budget-progress-bar"></i></div><p class="stat-detail" id="budget-detail">Set a budget to track progress</p></article>
+        <article class="stat-card remaining"><span class="stat-icon">◔</span><p class="stat-label">REMAINING BUDGET</p><p class="stat-value" id="remaining-budget">—</p><p class="stat-detail" id="remaining-detail">Waiting for a budget</p></article>
+      </section>
+      <section class="budget-alert" id="budget-alert" role="alert" hidden><span>!</span><p><strong>Budget exceeded.</strong> <span id="budget-alert-copy">Your expenses are above this month’s budget.</span></p><button class="text-button" id="alert-edit-budget" type="button">Adjust budget</button></section>
+
+      <section class="content-grid" aria-label="Analytics">
+        <article class="panel chart-panel"><header class="panel-heading"><div><p class="eyebrow">ANALYTICS</p><h2>Spending by category</h2></div><small>All time</small></header><div class="chart-and-legend"><div class="chart-wrap donut"><canvas id="category-chart" aria-label="Category spending chart" role="img"></canvas><p class="chart-empty" id="category-chart-empty">Add an expense to see your spending breakdown.</p></div><ul class="chart-legend" id="category-legend"></ul></div></article>
+        <article class="panel chart-panel"><header class="panel-heading"><div><p class="eyebrow">TRENDS</p><h2>Monthly expenses</h2></div><small>Last 6 months</small></header><div class="chart-wrap bars"><canvas id="monthly-chart" aria-label="Monthly expenses chart" role="img"></canvas><p class="chart-empty" id="monthly-chart-empty">Add dated expenses to see monthly trends.</p></div></article>
+      </section>
+
+      <section class="panel transactions-panel" id="transactions"><header class="panel-heading"><div><p class="eyebrow">ACTIVITY</p><h2>Transactions</h2></div><button class="button secondary small-button" id="quick-add-button" type="button">+ Add new</button></header>
+        <div class="filter-bar" aria-label="Filter transactions">
+          <label class="search"><span>⌕</span><input id="search-input" type="search" placeholder="Search transactions" autocomplete="off"></label>
+          <label class="select"><span class="sr-only">Category</span><select id="category-filter"><option value="all">All categories</option></select></label>
+          <label class="date"><span class="sr-only">Start date</span><input id="start-date-filter" type="date"></label><span class="to">to</span><label class="date"><span class="sr-only">End date</span><input id="end-date-filter" type="date"></label>
+          <label class="select sort"><span class="sr-only">Sort transactions</span><select id="sort-filter"><option value="newest">Newest first</option><option value="oldest">Oldest first</option><option value="highest">Highest amount</option><option value="lowest">Lowest amount</option></select></label><button class="filter-reset" id="reset-filters" type="button" hidden>Clear filters</button>
+        </div>
+        <div class="table-wrap"><table><thead><tr><th>Transaction</th><th>Category</th><th>Date</th><th class="amount-head">Amount</th><th><span class="sr-only">Actions</span></th></tr></thead><tbody id="transaction-list"></tbody></table>
+          <div class="empty-state" id="empty-state"><i>↗</i><h3>No transactions yet</h3><p>Add income or an expense to start building your financial picture.</p><button class="button primary" id="empty-add-button" type="button">Add your first transaction</button></div>
+          <div class="empty-state" id="no-results-state" hidden><i>⌕</i><h3>No matching transactions</h3><p>Try changing or clearing the current filters.</p><button class="button secondary" id="no-results-clear" type="button">Clear filters</button></div>
+        </div><p class="transaction-count" id="transaction-count"></p>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal-backdrop" id="transaction-modal" hidden><section class="modal" role="dialog" aria-modal="true" aria-labelledby="transaction-modal-title"><header class="modal-heading"><div><p class="eyebrow" id="transaction-modal-kicker">NEW ENTRY</p><h2 id="transaction-modal-title">Add transaction</h2></div><button class="icon-button close" type="button" data-close-modal aria-label="Close dialog">×</button></header><form id="transaction-form" novalidate><input id="transaction-id" type="hidden"><fieldset class="type-switch"><legend class="sr-only">Transaction type</legend><label><input type="radio" name="transaction-type" value="expense" checked><span>Expense</span></label><label><input type="radio" name="transaction-type" value="income"><span>Income</span></label></fieldset><div class="form-grid"><label class="form-field wide">Description<input id="description" type="text" maxlength="80" placeholder="e.g. Grocery run" required></label><label class="form-field">Amount (₹)<input id="amount" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="0.00" required></label><label class="form-field">Date<input id="transaction-date" type="date" required></label><label class="form-field" id="category-field">Category<select id="category" required></select></label></div><p class="form-error" id="transaction-form-error" role="alert" hidden></p><footer class="modal-footer"><button class="button secondary" type="button" data-close-modal>Cancel</button><button class="button primary" id="transaction-submit" type="submit">Save transaction</button></footer></form></section></div>
+
+  <div class="modal-backdrop" id="budget-modal" hidden><section class="modal modal-small" role="dialog" aria-modal="true" aria-labelledby="budget-modal-title"><header class="modal-heading"><div><p class="eyebrow">PLANNING</p><h2 id="budget-modal-title">Set monthly budget</h2></div><button class="icon-button close" type="button" data-close-budget aria-label="Close dialog">×</button></header><form id="budget-form" novalidate><label class="form-field">Monthly spending limit (₹)<input id="budget-input" type="number" min="0" step="1" inputmode="decimal" placeholder="e.g. 30000" required></label><p class="form-help">This applies to expenses in the current calendar month.</p><p class="form-error" id="budget-form-error" role="alert" hidden></p><footer class="modal-footer"><button class="button secondary" type="button" data-close-budget>Cancel</button><button class="button primary" type="submit">Save budget</button></footer></form></section></div>
+
+  <div class="modal-backdrop" id="insights-modal" hidden><section class="modal modal-small" role="dialog" aria-modal="true" aria-labelledby="insights-modal-title"><header class="modal-heading"><div><p class="eyebrow">SMART SUMMARY</p><h2 id="insights-modal-title">Your AI insights</h2></div><button class="icon-button close" type="button" data-close-insights aria-label="Close dialog">×</button></header><p class="insights-intro">A transparent, on-device analysis of the transactions saved in this browser.</p><div class="insight-list" id="insight-list"></div><footer class="modal-footer"><button class="button primary" type="button" data-close-insights>Got it</button></footer></section></div>
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 </body>
 </html>
